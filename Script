@@ -1,0 +1,176 @@
+#M Backup_Move_Restore_BDDTRE
+# GALISSI Thomas - FIDUCIAL - 2016
+#
+# en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
+$ErrorActionPreference = "Stop"
+# efface l'ecran, equivalent de CLS
+clear-host
+# write-host affiche à l'écran mais ne peut pas être redirigé vers un fichier de log, donc juste une information à l'écran
+write-host " *****************************************************************************"
+write-host " ** Script de sauvegarde de la BDD de PROD vers D:\backup\ **"
+write-host " *****************************************************************************"
+write-host "  Notas :                                                                     "
+write-host " Etape 1 : sauvegarde                                                         "
+write-host " Etape 2: Déplacement                                                         "
+write-host " Etape 3 restauration                                                         "
+write-host " *****************************************************************************"
+#LANCEMENT DU SCRIPT DE SAUVEGARDE
+Set-Location C:\script_fos
+.\sauvegarde.ps1
+Start-Sleep -s 10
+#LANCEMENT DU SCRIPT DE DEPLACEMENT
+Set-Location C:\script_fos
+.\déplacement.ps1
+Start-Sleep -s 10
+#LANCEMENT DU SCRIPT DE RESTAURATION
+Set-Location C:\script_fos
+.\restauration.ps1
+# on sort de la boucle donc on arrive à la fin du script
+write-host "******************************* Fin du script *******************************"
+echo "INFO : ******************************* Fin du script *******************************"
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#M Backup_Move_Restore_BDDTRE
+# GALISSI Thomas - FIDUCIAL - 2016
+#
+# en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
+$ErrorActionPreference = "Stop"
+# efface l'ecran, equivalent de CLS
+#clear-host
+# write-host affiche à l'écran mais ne peut pas être redirigé vers un fichier de log, donc juste une information à l'écran
+write-host " *****************************************************************************"
+write-host " ** Script de sauvegarde de la BDD de PROD vers \Exploitation\BackupBases   **"
+write-host " *****************************************************************************"
+write-host "                                                                              "
+write-host " Notas :                                                                      "
+write-host " le serveur SQL est définis dans la variable svrname et la bdd dans dbname    "
+write-host " en cas de refus de connexion vérifier les droits sur les DB.                 "
+write-host " *****************************************************************************"
+#Selection du dossier ou supprimer les fichiers.
+$DataFolder = 'D:\Exploitation\BackupBases'
+#Suppression des ancien backups 2 jours de retention.
+Get-Childitem $DataFolder -recurse | ?{($_.PSIsContainer -eq 0) -and ($_.CreationTime -lt (get-Date).adddays(-1))} | remove-item
+# on  importe le module SQLPS et on d'active le check des noms
+Import-Module  SQLPS –DisableNameChecking
+#Génération de la date pour le backup
+$dt = Get-Date -Format yyyyMMddHHmmss
+# Selction de la base de donnée à sauvegarder.
+$dbname = "tracabilite"
+#Varaible du nom du serveur sql
+$srvname = "NOMSERVEUR"
+#Commande SQL pour backuper suivis du nom de l'instance SQL de la variable de la base de donnée et de la destination du backup
+Backup-SqlDatabase -ServerInstance $srvname -Database $dbname -BackupFile "D:\Exploitation\BackupBases\$($dbname)_db_$($dt).bak"
+# on sort de la boucle donc on arrive à la fin du script
+write-host "******************************* Fin Etape 1 *******************************"
+echo "INFO : ******************************* Fin Etape 1 *******************************"
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#M Backup_Move_Restore_BDDTRE
+# GALISSI Thomas - FIDUCIAL - 2016
+#
+# en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
+$ErrorActionPreference = "Stop"
+# affiche la date / heure de début du script dans le fichier de log + pas d'option -append donc crée (ou remplace) le fichier de log
+get-date | Out-File -FilePath E:\Logs\Scripts\Logs\copie_bdd_prod.log
+# creation de la variable $pause qui indique si on veut les pauses ou non, pour exécuter le programme à la main
+$pause="YES"
+# si on rajoute l'argument nopause apres le nom du script, enleve les pause (pour le passer en script de tache planifiée)
+foreach($argument in $args) {
+if($argument -eq "nopause") {
+# dans se cas on définit la valeur de la variable $pause à NO
+$pause = "NO"}
+}
+# write-host affiche à l'écran mais ne peut pas être redirigé vers un fichier de log, donc juste une information à l'écran
+write-host " *****************************************************************************"
+write-host " ** Script de recopie de la BDD de PROD vers \\SVLYOTRR20\Exploitation\BackupBases          **"
+write-host " *****************************************************************************"
+write-host "                                                                              "
+write-host " Notas :                                                                      "
+write-host " les serveurs sélectionnés sont ceux dont l'adresse IP est présente dans      "
+write-host " le fichier: D:\Scripts\serveurs_bdd_PROD.txt                                 "
+write-host " *****************************************************************************"
+# on va lister les adresses IP des serveurs présents dans le fichier txt et faire une boucle qui s'exécute pour chaque occurence d'adresse IP
+forEach ($svrReporting in get-content E:\Logs\Scripts\serveur_reporting.txt)
+{
+# affiche à l'écran mais impossible à rediriger ...
+write-host "******************************* $svrReporting *******************************"
+# ... du coup echo puis | out-file avec option -append pour logger la ligne (astuce : j'ai rajouté "INFO :" pour ajouter de la lisibilité
+echo "INFO : ******************************* $svrReporting *******************************" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+Write-Host "Test de la réponse du serveur $svrReporting (...)"
+echo "INFO : Test de la réponse du serveur $svrReporting (...)" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+# test-connexion est un équivalent de ping, mais avec l'option -count 1 -quiet ça renvoit TRUE ou FALSE selon si le ping aboutit ou non
+if (test-connection $svrReporting -count 1 -quiet)
+# si la valeur renvoyée de test-connexion est TRUE
+{
+write-host " --&gt; OK" -ForegroundColor green
+echo "INFO : --&gt; OK" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+# copie des fichiers du .bak vers le chemin (contenant l'adresse IP du serveur
+write-host "Copie de la base de PROD vers $svrReporting (...)"
+echo "INFO : Copie de la base de PROD vers $svrReporting (...)" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+# on va catcher les erreurs de copie qui pourraient arriver donc il faut faire un try de cette commande
+try {
+copy-item D:\Exploitation\BackupBases\*.bak -destination \\$svrReporting\D$\Exploitation\BackupBases\ -recurse -force
+write-host " --&gt; OK" -ForegroundColor green
+echo "INFO : --&gt; OK" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log}
+# du coup si il y a une erreur, on l'affiche en rouge et on la logge (2 lignes car write-host ne peut pas etre redirigé vers un fichier)
+catch {
+write-host $error[0].exception.message -ForegroundColor red
+echo "ERROR : $error[0].exception.message" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log }
+# même chose avec les fichiers du répertoire backup
+write-host "Copie de la base de PROD vers $svrReporting (...)"
+echo "INFO : Copie de la base de PROD vers $svrReporting (...)" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+# fin de la boucle de copie pour les test-connexion OK
+}
+else
+# si la valeur renvoyée de test-connexion est FALSE
+{
+write-host " --&gt; Serveur $svrReporting pas allumé ou pas joignable par PING." -ForegroundColor red
+echo "WARN : --&gt; Serveur $svrReporting pas allumé ou pas joignable par PING." | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+echo "WARN : Arret de la copie sur $svrReporting - Aucune copie effectuée sur $svrReporting"
+}
+# fin de la boucle, donc on retourne au début tant qu'il y a des valeurs dans le fichier texte
+}
+# on sort de la boucle donc on arrive à la fin du script
+write-host "******************************* Fin Etape 2 *******************************"
+echo "INFO : ******************************* Fin Etape 2 *******************************"| Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+# affiche la date / heure de fin du script dans le fichier de log
+get-date | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#M Backup_Move_Restore_BDDTRE
+# GALISSI Thomas - FIDUCIAL - 2016
+#
+# en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
+$ErrorActionPreference = "Stop"
+# efface l'ecran, equivalent de CLS
+#clear-host
+# write-host affiche à l'écran mais ne peut pas être redirigé vers un fichier de log, donc juste une information à l'écran
+write-host " *****************************************************************************"
+write-host " ** Script de `restauration de la BDD de PROD vers SVLYOTRR20 \Exploitation\BackupBases     **"
+write-host " *****************************************************************************"
+write-host "                                                                              "
+write-host " Notas :                                                                      "
+write-host " le serveur SQL est définis dans la variable svrname et la bdd dans dbname    "
+write-host " en cas de refus de connexion vérifier les droits sur les DB.                 "
+write-host " *****************************************************************************"
+#Selection du dossier ou supprimer les fichiers.
+$DataFolder = '\\NOMSERVEUR\d$\\Exploitation\BackupBases'
+#Suppression des ancien backups 2 jours de retention.
+Get-Childitem $DataFolder -recurse | ?{($_.PSIsContainer -eq 0) -and ($_.CreationTime -lt (get-Date).adddays(-1))} | remove-item
+# on  importe le module SQLPS et on d'active le check des noms
+Import-Module  SQLPS –DisableNameChecking
+$dbname = 'tracabilite'
+#Varaible du nom du serveur sql
+$srvname = 'NOMSERVEUR'
+$file = (Get-ChildItem -Path D:\Exploitation\BackupBases -recurse -include *.bak | Sort-Object -Property CreationTime | Select-Object -Last 1).name
+#Commande SQL pour backuper suivis du nom de l'instance SQL de la variable de la base de donnée et de la destination du backup
+Restore-SqlDatabase -ServerInstance $srvname -Database $dbname `
+-BackupFile $file -ReplaceDatabase
+write-host "******************************* Fin Etape 3 *******************************"
+echo "INFO : ******************************* Fin Etape 3 *******************************"
