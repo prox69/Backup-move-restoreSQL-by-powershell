@@ -172,5 +172,7 @@ $file = (Get-ChildItem -Path D:\Exploitation\BackupBases -recurse -include *.bak
 #Commande SQL pour backuper suivis du nom de l'instance SQL de la variable de la base de donnée et de la destination du backup
 Restore-SqlDatabase -ServerInstance $srvname -Database $dbname `
 -BackupFile $file -ReplaceDatabase
+#Remappage automatique du user
+Invoke-Sqlcmd "EXEC sp_change_users_login 'Auto_Fix', 'tracabilite'" -ServerInstance "$srvname" -Database "$dbname"
 write-host "******************************* Fin Etape 3 *******************************"
 echo "INFO : ******************************* Fin Etape 3 *******************************"
