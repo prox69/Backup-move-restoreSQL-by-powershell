@@ -41,7 +41,7 @@ $ErrorActionPreference = "Stop"
 #clear-host
 # write-host affiche à l'écran mais ne peut pas être redirigé vers un fichier de log, donc juste une information à l'écran
 write-host " *****************************************************************************"
-write-host " ** Script de sauvegarde de la BDD de PROD vers \Exploitation\BackupBases   **"
+write-host " ** Script de sauvegarde de la BDD de PROD vers Serveur de reporting        **"
 write-host " *****************************************************************************"
 write-host "                                                                              "
 write-host " Notas :                                                                      "
@@ -57,11 +57,11 @@ Import-Module  SQLPS –DisableNameChecking
 #Génération de la date pour le backup
 $dt = Get-Date -Format yyyyMMddHHmmss
 # Selction de la base de donnée à sauvegarder.
-$dbname = "tracabilite"
+$dbname = "nom de bdd"
 #Varaible du nom du serveur sql
 $srvname = "NOMSERVEUR"
 #Commande SQL pour backuper suivis du nom de l'instance SQL de la variable de la base de donnée et de la destination du backup
-Backup-SqlDatabase -ServerInstance $srvname -Database $dbname -BackupFile "D:\Exploitation\BackupBases\$($dbname)_db_$($dt).bak"
+Backup-SqlDatabase -ServerInstance $srvname -Database $dbname -BackupFile "lieu_de_backup\$($dbname)_db_$($dt).bak"
 # on sort de la boucle donc on arrive à la fin du script
 write-host "******************************* Fin Etape 1 *******************************"
 echo "INFO : ******************************* Fin Etape 1 *******************************"
@@ -86,7 +86,7 @@ $pause = "NO"}
 }
 # write-host affiche à l'écran mais ne peut pas être redirigé vers un fichier de log, donc juste une information à l'écran
 write-host " *****************************************************************************"
-write-host " ** Script de recopie de la BDD de PROD vers \\SVLYOTRR20\Exploitation\BackupBases          **"
+write-host " ** Script de recopie de la BDD de PROD vers serveur reporting              **"
 write-host " *****************************************************************************"
 write-host "                                                                              "
 write-host " Notas :                                                                      "
@@ -152,7 +152,7 @@ $ErrorActionPreference = "Stop"
 #clear-host
 # write-host affiche à l'écran mais ne peut pas être redirigé vers un fichier de log, donc juste une information à l'écran
 write-host " *****************************************************************************"
-write-host " ** Script de `restauration de la BDD de PROD vers SVLYOTRR20 \Exploitation\BackupBases     **"
+write-host " ** Script de `restauration de la BDD de PROD sur serveur de reporting      **"
 write-host " *****************************************************************************"
 write-host "                                                                              "
 write-host " Notas :                                                                      "
@@ -165,7 +165,7 @@ $DataFolder = '\\NOMSERVEUR\d$\\Exploitation\BackupBases'
 Get-Childitem $DataFolder -recurse | ?{($_.PSIsContainer -eq 0) -and ($_.CreationTime -lt (get-Date).adddays(-1))} | remove-item
 # on  importe le module SQLPS et on d'active le check des noms
 Import-Module  SQLPS –DisableNameChecking
-$dbname = 'tracabilite'
+$dbname = 'nom BDD'
 #Varaible du nom du serveur sql
 $srvname = 'NOMSERVEUR'
 $file = (Get-ChildItem -Path D:\Exploitation\BackupBases -recurse -include *.bak | Sort-Object -Property CreationTime | Select-Object -Last 1).name
@@ -173,6 +173,6 @@ $file = (Get-ChildItem -Path D:\Exploitation\BackupBases -recurse -include *.bak
 Restore-SqlDatabase -ServerInstance $srvname -Database $dbname `
 -BackupFile $file -ReplaceDatabase
 #Remappage automatique du user
-Invoke-Sqlcmd "EXEC sp_change_users_login 'Auto_Fix', 'tracabilite'" -ServerInstance "$srvname" -Database "$dbname"
+Invoke-Sqlcmd "EXEC sp_change_users_login 'Auto_Fix', 'user'" -ServerInstance "$srvname" -Database "$dbname"
 write-host "******************************* Fin Etape 3 *******************************"
 echo "INFO : ******************************* Fin Etape 3 *******************************"
