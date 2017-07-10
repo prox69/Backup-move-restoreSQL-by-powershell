@@ -1,5 +1,5 @@
-#M Backup_Move_Restore_BDDTRE
-# GALISSI Thomas - FIDUCIAL - 2016
+# Backup_Move_Restore_BDD
+# GALISSI Thomas - 2016
 #
 # en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
 $ErrorActionPreference = "Stop"
@@ -32,8 +32,8 @@ echo "INFO : ******************************* Fin du script *********************
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#M Backup_Move_Restore_BDDTRE
-# GALISSI Thomas - FIDUCIAL - 2016
+# Backup_Move_Restore_BDD
+# GALISSI Thomas - 2016
 #
 # en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
 $ErrorActionPreference = "Stop"
@@ -69,8 +69,8 @@ echo "INFO : ******************************* Fin Etape 1 ***********************
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#M Backup_Move_Restore_BDDTRE
-# GALISSI Thomas - FIDUCIAL - 2016
+# Backup_Move_Restore_BDD
+# GALISSI Thomas - 2016
 #
 # en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
 $ErrorActionPreference = "Stop"
@@ -113,7 +113,7 @@ write-host "Copie de la base de PROD vers $svrReporting (...)"
 echo "INFO : Copie de la base de PROD vers $svrReporting (...)" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
 # on va catcher les erreurs de copie qui pourraient arriver donc il faut faire un try de cette commande
 try {
-copy-item D:\Exploitation\BackupBases\*.bak -destination \\$svrReporting\D$\DossierBackup\ -recurse -force
+copy-item D:\DossierBackup\*.bak -destination \\$svrReporting\D$\DossierBackup\ -recurse -force
 write-host " --&gt; OK" -ForegroundColor green
 echo "INFO : --&gt; OK" | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log}
 # du coup si il y a une erreur, on l'affiche en rouge et on la logge (2 lignes car write-host ne peut pas etre redirigé vers un fichier)
@@ -143,8 +143,8 @@ get-date | Out-File -Append -FilePath E:\Logs\Scripts\Logs\copie_bdd_PROD.log
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#M Backup_Move_Restore_BDDTRE
-# GALISSI Thomas - FIDUCIAL - 2016
+# Backup_Move_Restore_BDD
+# GALISSI Thomas - 2016
 #
 # en cas d'erreur, la commande suivante affiche la version 'lisible humainement' au lieu de la version détaillée technique
 $ErrorActionPreference = "Stop"
